@@ -9,21 +9,31 @@ void init() {
     DDRB &= ~(1<<DDB0); // set B0 as input pin
     DDRB |= (1<<DDB5);  // set B5 as output pin
 
-    PCICR |= (1 << PCIE0); // Enable Pin Change Interrupt 0
-    PCMSK0 |= (1 << PCINT0); // Enable interrupt on PB0
+    // PORTB |= (1 << PORTB0); // enable pull-up resistor on PB0
+    TCCR1B |= (1<<ICES1);   // enable interrupt on rising edge
+    TIMSK1 |= (1<<ICIE1);   // input capture interrupt
+    TIFR1 |= (1<<ICF1);     // input capture flag reset
 
     sei();  // re-enable interrupts
 }
 
-ISR(PCINT0_vect) {
-    if (PINB & (1 << PINB0)) {
-        PORTB |= (1 << PINB5); // Set PB5 high
-    }
-    else {
-        PORTB &= ~(1 << PINB5); // Set PB5 low
-    }
-}
+ISR(TIMER1_CAPT_vect) {
 
+        if (PINB & (1<<PINB0)) {
+
+            PORTB |= (1<<PORTB5);       // light on
+
+        } else {
+
+            PORTB &= ~(1<<PORTB5);      // light off
+
+        }
+
+        TCCR1B ^= (1<<ICES1);           // toggle edge detection
+        TIFR1 |= (1 << ICF1);           // input capture flag reset
+
+        _delay_ms(150);
+}
 
 int main(void) {
 
